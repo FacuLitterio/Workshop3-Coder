@@ -1,13 +1,10 @@
 import { Router } from "express";
+import { loginView, registerView } from "../controllers/users.controller.js";
 
 const router = Router();
 
-router.get("/login", (req, res) => {
-    res.render("login");
-});
+router.get("/login", loginView);
 
-router.get("/register", (req, res) => {
-    res.render("register");
-});
+router.get("/register", registerView);
 
 export default router;

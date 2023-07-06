@@ -1,37 +1,36 @@
-import express from 'express';
-import __dirname from './util.js';
-import handlebars from 'express-handlebars';
-import mongoose from 'mongoose';
+import express from "express";
+import handlebars from "express-handlebars";
+import __dirname from "./util.js";
 //Cookies si aplica:
-import cookieParser from 'cookie-parser';
+import cookieParser from "cookie-parser";
 //Passport imports
-import passport from 'passport';
-import initializePassport from './config/passport.config.js';
-import config from './config/config.js';
-import { addLogger } from './config/logger.js';
-
+import passport from "passport";
+import config from "./config/config.js";
+import initializePassport from "./config/passport.config.js";
 
 //Routers a importar:
-import studentRouter from './routes/students.router.js'
-import coursesRouter from './routes/courses.router.js'
+import { addLogger } from "./config/logger.js";
+import MongoDBSingleton from "./config/mongodb-singleton.js";
+import coursesRouter from "./routes/courses.router.js";
+import jwtRouter from "./routes/jwt.router.js";
+import studentRouter from "./routes/students.router.js";
+import usersViewRouter from "./routes/users.view.router.js";
 import viewsRouter from "./routes/views.router.js";
-import usersViewRouter from './routes/users.view.router.js'
-import jwtRouter from './routes/jwt.router.js'
 
 //Declarando Express para usar sus funciones.
 const app = express();
 
 //Preparar la configuracion del servidor para recibir objetos JSON.
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 
 /**
  * Template engine
  */
-app.engine('handlebars',handlebars.engine());
-app.set('views',__dirname+'/views');
-app.set('view engine','handlebars');
-app.use(express.static(__dirname+'/public'))
+app.engine("handlebars", handlebars.engine());
+app.set("views", __dirname + "/views");
+app.set("view engine", "handlebars");
+app.use(express.static(__dirname + "/public"));
 
 //(Solo si usar Cookies): inicializar el cookie parser.
 app.use(cookieParser("CoderS3cr3tC0d3"));
@@ -40,24 +39,15 @@ initializePassport();
 app.use(passport.initialize());
 
 //Declaración de Routers:
-app.use('/',viewsRouter);
-app.use("/api/students", studentRouter);
-app.use("/api/courses", coursesRouter);
-app.use("/users", usersViewRouter);
+app.use("/", viewsRouter);
+app.use("/api/students", addLogger, studentRouter);
+app.use("/api/courses", addLogger, coursesRouter);
+app.use("/users", addLogger, usersViewRouter);
 app.use("/api/jwt", jwtRouter);
 
 const SERVER_PORT = config.port;
 app.listen(SERVER_PORT, () => {
-    console.log("Servidor escuchando por el puerto: " + SERVER_PORT);
+  console.log("Servidor escuchando por el puerto: " + SERVER_PORT);
 });
 
-const connectMongoDB = async ()=>{
-    try {
-        await mongoose.connect(config.mongoUrl);
-        console.log("Conectado con exito a MongoDB usando Moongose.");
-    } catch (error) {
-        console.error("No se pudo conectar a la BD usando Moongose: " + error);
-        process.exit();
-    }
-};
-connectMongoDB();
+new MongoDBSingleton();
